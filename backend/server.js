@@ -2,22 +2,21 @@ require("dotenv").config();
 const express = require("express");
 const db = require("./config/db");
 const cors = require("cors");
-const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/UserRoutes");
+const authRoutes=require("./routes/auth")
+const user=require("./routes/userRoutes")
+const skillRoutes=require("./routes/skillRoutes");
+const skillRequestRoutes=require("./routes/skillRequestRoutes");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/auth",authRoutes);
+app.use("/api/user",user);
+app.use("/api/skills",skillRoutes);
+app.use("/api/skill-requests",skillRequestRoutes);
 
 const PORT = process.env.PORT || 1010;
-app.get("/", (req, res) => {
-    res.status(201).json({ "message": "Welcome to the Skill Trade Platform Server" });
-});
-
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
 });

@@ -1,14 +1,22 @@
 const jwt = require("jsonwebtoken");
 
-module.exports = function (req, res, next) {
+const authMiddleware = (req, res, next) => {
     const token = req.header("Authorization");
+
     if (!token) return res.status(401).json({ msg: "No token, authorization denied" });
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        const tokenParts = token.split(" ");
+        if (tokenParts.length !== 2 || tokenParts[0] !== "Bearer") {
+            return res.status(401).json({ msg: "Invalid token format" });
+        }
+
+        const decoded = jwt.verify(tokenParts[1], process.env.JWT_SECRET);
+        req.user = decoded;  
         next();
     } catch (err) {
-        res.status(400).json({ msg: "Invalid token" });
+        res.status(401).json({ msg: "Invalid token" });
     }
 };
+
+module.exports = authMiddleware;
