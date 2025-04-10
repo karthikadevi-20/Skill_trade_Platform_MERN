@@ -1,11 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar"
 
 const LandingPage = () => {
   return (
-    <div className="h-screen flex flex-col justify-center items-center text-center bg-gradient-to-r from-blue-200 to-purple-300 relative overflow-hidden px-6">
-     
-      <div className="text-center z-10">
+    <div className="h-screen flex flex-col justify-center items-center text-center bg-gradient-to-r from-blue-200 to-purple-300  px-6">
+     <Navbar/>
+      <div className="text-center">
         <h1 className="text-6xl font-extrabold text-gray-800 mb-4">
           Learn, Share & Grow!
         </h1>
@@ -13,7 +14,7 @@ const LandingPage = () => {
           Connect with skilled individuals, exchange knowledge, and upgrade your expertise in a collaborative environment.
         </p>
         <Link to="/signup">
-          <button className="grad-primary text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition">
+          <button className="grad-primary text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-700 transistion">
             Get Started
           </button>
         </Link>

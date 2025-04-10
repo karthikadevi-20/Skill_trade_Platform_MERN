@@ -1,20 +1,19 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { login } from "../redux/authSlice";  
 import SignupImage from "../assets/img/loginpage.png";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
+    // dispatch(login());
+    navigate("/dashboard");
   };
 
   return (
@@ -29,8 +28,6 @@ const Login = () => {
               type="email"
               name="email"
               placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
               className="w-full p-3 border-b-2 border-gray-300 focus:outline-none focus:ring-0"
             />
 
@@ -38,26 +35,25 @@ const Login = () => {
               type="password"
               name="password"
               placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
+             
               className="w-full p-3 border-b-2 border-gray-300 focus:outline-none focus:ring-0"
             />
 
             <button
               type="submit"
-              className="w-full grad-primary text-white p-3 rounded-lg font-semibold ransition"
+              className="w-full grad-primary text-white p-3 rounded-lg font-semibold transition"
             >
               Login
             </button>
+            <p className="text-center text-gray-600 mt-3 pb-2">
+                    Don't have an account?{" "}
+                    <Link to="/signup" className="text-purple-600 font-semibold hover:underline">
+                      Create one
+                    </Link>
+                  </p>    
           </form>
-
-          <p className="text-center text-gray-600 mt-4">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-purple-600 font-semibold hover:underline">
-              Create one
-            </Link>
-          </p>
         </div>
+        
 
         <div className="w-1/2 bg-gray-100 flex justify-center items-center">
           <img src={SignupImage} alt="Login" className="w-4/5" />
