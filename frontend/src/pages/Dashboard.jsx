@@ -3,53 +3,37 @@ import { FaPlus, FaFilter, FaComments } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Nav from '../components/Nav';
 import Card from '../components/Card';
+import { getRequests, addRequests } from '../api/auth';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const loggedInUser = JSON.parse(localStorage.getItem('user'));
 
-  const loggedInUser = {
-    name: 'Sri',
-    points: 50,
-    logo: 'https://randomuser.me/api/portraits/women/18.jpg',
-    offers: ['React', 'Java'],
-  };
-
-  const [users, setUsers] = useState([
-    {
-      name: 'Sri',
-      points: 50,
-      offers: ['React', 'Java'],
-      seeks: ['DSA', 'Communication'],
-      logo: 'https://randomuser.me/api/portraits/women/18.jpg',
-    },
-    {
-      name: 'Aruna',
-      points: 40,
-      offers: ['Python', 'Design'],
-      seeks: ['Public Speaking', 'JavaScript'],
-      logo: 'https://randomuser.me/api/portraits/women/19.jpg',
-    },
-    {
-      name: 'John',
-      points: 60,
-      offers: ['UI/UX'],
-      seeks: ['Backend'],
-      logo: 'https://randomuser.me/api/portraits/men/44.jpg',
-    },
-  ]);
-
-  const [filteredUsers, setFilteredUsers] = useState(users);
+  const [requests, setRequests] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [formData, setFormData] = useState({ seeks: '' });
+  const [filters, setFilters] = useState({ offers: [], seeks: [] });
 
-  const [formData, setFormData] = useState({
-    seeks: '',
-  });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getRequests();
+        setRequests(res.data);
+        setFilteredUsers(res.data);
+      } catch (error) {
+        console.error('Error fetching requests:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const [filters, setFilters] = useState({ status: [], skills: [] });
-
-  const allOffers = [...new Set(users.flatMap((user) => user.offers))];
-  const allSeeks = [...new Set(users.flatMap((user) => user.seeks))];
+  const allOffers = loggedInUser?.skillsOffered||[];
+  const allSeeks = [...new Set(requests.flatMap((r) => r.skillsNeeded))];
+  console.log("allOffers:", allOffers);
+  console.log("requests:", requests);
+  
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -66,41 +50,49 @@ const Dashboard = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ status: [], skills: [] });
-    setFilteredUsers(users);
+    setFilters({ offers: [], seeks: [] });
+    setFilteredUsers(requests);
   };
 
   const applyFilters = () => {
-    const filtered = users.filter((user) => {
+    const filtered = requests.filter((request) => {
       const matchesOffer =
-        filters.status.length === 0 ||
-        user.offers.some((skill) => filters.status.includes(skill));
-      const matchesSeek =
-        filters.skills.length === 0 ||
-        user.seeks.some((skill) => filters.skills.includes(skill));
-      return matchesOffer && matchesSeek;
+        filters.offers.length === 0 ||
+        (request.skillsNeeded &&
+          request.skillsNeeded.some((skill) => filters.offers.includes(skill)));
+  
+      const matchesNeed =
+        filters.seeks.length === 0 ||
+        (request.skillsOffered &&
+          request.skillsOffered.some((skill) => filters.seeks.includes(skill)));
+  
+      return matchesOffer && matchesNeed;
     });
-
+  
     setFilteredUsers(filtered);
     setShowFilter(false);
   };
+  
 
-  const postSkillRequest = () => {
-    if (!formData.seeks.trim()) return;
+  const postSkillRequest = async () => {
 
-    const newPost = {
-      name: loggedInUser.name,
-      points: loggedInUser.points,
-      offers: loggedInUser.offers,
-      seeks: formData.seeks.split(',').map((s) => s.trim()),
-      logo: loggedInUser.logo,
+    const newRequest = {
+      createdBy: loggedInUser._id,
+      skillsNeeded: formData.seeks.split(',').map((s) => s.trim()),
+      skillsOffered: loggedInUser.skillsOffered,
     };
 
-    const updatedUsers = [...users, newPost];
-    setUsers(updatedUsers);
-    setFilteredUsers(updatedUsers);
-    setShowAddModal(false);
-    setFormData({ seeks: '' });
+    try {
+      const res = await addRequests(newRequest);
+      const addedRequest = res.data;
+      const updatedRequests = [...requests, addedRequest];
+      setRequests(updatedRequests);
+      setFilteredUsers(updatedRequests);
+      setShowAddModal(false);
+      setFormData({ seeks: '' });
+    } catch (err) {
+      console.error('Error adding request:', err.message);
+    }
   };
 
   return (
@@ -109,7 +101,7 @@ const Dashboard = () => {
 
       <div className="pt-24 px-4 flex flex-col items-center justify-center gap-8 text-center">
         <div>
-          <p className="text-4xl font-bold text-gray-800">Welcome, {loggedInUser.name}!!</p>
+          <p className="text-4xl font-bold text-gray-800">Welcome, {loggedInUser.username}!!</p>
           <p className="text-lg text-gray-700 mt-2">Share your knowledge to gain knowledge</p>
         </div>
 
@@ -123,7 +115,7 @@ const Dashboard = () => {
 
           <button
             className="flex items-center gap-2 bg-purple-600 hover:bg-purple-800 text-white px-6 py-2 rounded-lg font-semibold transition"
-            onClick={() => navigate('/connections')}
+            onClick={() => navigate('/mockc')}
           >
             <FaComments /> Connections
           </button>
@@ -136,57 +128,64 @@ const Dashboard = () => {
           </button>
 
           {showFilter && (
-            <div className="absolute top-14 right-0 bg-white rounded-lg shadow-lg p-4 w-64 z-10 text-left">
-              <div>
-                <p className="font-semibold mb-2">Skill You Can Offer</p>
-                {allOffers.map((skill) => (
-                  <label key={skill} className="flex items-center mb-1">
-                    <input
-                      type="checkbox"
-                      checked={filters.status.includes(skill)}
-                      onChange={() => handleCheckboxChange('status', skill)}
-                      className="mr-2"
-                    />
-                    {skill}
-                  </label>
-                ))}
-              </div>
+  <div className="absolute top-14 right-0 bg-white rounded-lg shadow-lg p-4 w-72 z-10 text-left overflow-y-auto max-h-[400px]">
+    <div className="mb-4">
+      <p className="font-semibold text-purple-700 mb-2">Filter by Skill Offered</p>
+      {allOffers.map((skill,index) => (
+        <label key={`${skill}-${index}`} className="flex items-center mb-1 text-sm">
+          <input
+            type="checkbox"
+            checked={filters.offers.includes(skill)}
+            onChange={() => handleCheckboxChange('offers', skill)}
+            className="mr-2"
+          />
+          {skill}
+        </label>
+      ))}
+    </div>
 
-              <div className="mt-4">
-                <p className="font-semibold mb-2">Skill You Want</p>
-                {allSeeks.map((skill) => (
-                  <label key={skill} className="flex items-center mb-1">
-                    <input
-                      type="checkbox"
-                      checked={filters.skills.includes(skill)}
-                      onChange={() => handleCheckboxChange('skills', skill)}
-                      className="mr-2"
-                    />
-                    {skill}
-                  </label>
-                ))}
-              </div>
+    <div className="mb-4">
+      <p className="font-semibold text-purple-700 mb-2">Filter by Skill Needed</p>
+      {allSeeks.map((skill,index) => (
+        <label key={`${skill}-${index}`} className="flex items-center mb-1 text-sm">
+          <input
+            type="checkbox"
+            checked={filters.seeks.includes(skill)}
+            onChange={() => handleCheckboxChange('seeks', skill)}
+            className="mr-2"
+          />
+          {skill}
+        </label>
+      ))}
+    </div>
 
-              <div className="mt-4 flex justify-between">
-                <button className="text-sm text-red-600 underline" onClick={clearFilters}>
-                  Clear All
-                </button>
-                <button
-                  className="bg-purple-600 hover:bg-purple-800 text-white text-sm px-4 py-1 rounded"
-                  onClick={applyFilters}
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          )}
+    <div className="flex justify-between">
+      <button
+        className="text-red-600 text-sm underline"
+        onClick={clearFilters}
+      >
+        Clear All
+      </button>
+      <button
+        className="bg-purple-600 hover:bg-purple-800 text-white text-sm px-4 py-1 rounded"
+        onClick={applyFilters}
+      >
+        Apply
+      </button>
+    </div>
+  </div>
+)}
+
+
         </div>
       </div>
 
       <div className="px-6 pt-8 pb-12 w-full flex flex-wrap gap-6 justify-center">
-        {filteredUsers.map((user, index) => (
-          <Card key={index} user={user} />
-        ))}
+        {filteredUsers.length > 0 ? (
+          filteredUsers.map((request, index) => <Card key={index} request={request} />)
+        ) : (
+          <p className="text-gray-700 text-lg mt-12">No matching skill requests found.</p>
+        )}
       </div>
 
       {showAddModal && (
@@ -203,20 +202,20 @@ const Dashboard = () => {
 
             <div className="flex items-center gap-4 mb-4">
               <img
-                src={loggedInUser.logo}
+                src={loggedInUser.profileUrl || `https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=${loggedInUser.username}`}
                 alt="User"
                 className="w-14 h-14 rounded-full border-2"
               />
               <div>
-                <p className="font-semibold text-gray-800">{loggedInUser.name}</p>
-                <p className="text-sm text-gray-600">{loggedInUser.points} Skill Points</p>
+                <p className="font-semibold text-gray-800">{loggedInUser.username}</p>
+                <p className="text-sm text-gray-600">{loggedInUser.skillPoints} Skill Points</p>
               </div>
             </div>
 
             <div className="mb-4">
               <label className="block text-gray-700 font-medium mb-1">Skill You Offer</label>
               <div className="px-3 py-2 border rounded-md bg-gray-100 text-gray-700">
-                {loggedInUser.offers.join(', ')}
+                {loggedInUser.skillsOffered.join(', ')}
               </div>
             </div>
 

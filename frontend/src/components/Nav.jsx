@@ -5,6 +5,7 @@ import { AiFillHome } from "react-icons/ai";
 import { CgProfile } from "react-icons/cg";
 import { ImSearch } from "react-icons/im";
 import { Link, useNavigate } from "react-router-dom";
+import { logoutUser } from '../api/auth';
 
 const Nav = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -14,11 +15,11 @@ const Nav = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    logoutUser();
     console.log("Logging out...");
     navigate('/');
   };
 
-  // Close dropdowns if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -44,7 +45,7 @@ const Nav = () => {
 
   return (
     <div className="bg-white shadow-md py-4 px-8 fixed w-full top-0 z-50">
-      <div className="flex items-center justify-between">
+      <div className=" mr-20 ml-20 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
           <img src={Logo} alt="Logo" className="h-[40px]" />

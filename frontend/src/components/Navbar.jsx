@@ -1,8 +1,8 @@
 import React from "react";
-import { useSelector, useDispatch } from "react-redux";
+// import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { FaSearch, FaBell, FaEnvelope, FaUserCircle } from "react-icons/fa";
-import { logout } from "../redux/authSlice"; 
+// import { logout } from "../redux/authSlice"; 
 import Logo from "../assets/img/logopic.png";
 
 const Navbar = () => {

@@ -1,19 +1,30 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import { login } from "../redux/authSlice";  
+import { Link, useNavigate } from "react-router-dom"; 
 import SignupImage from "../assets/img/loginpage.png";
+import { loginUser } from "../api/auth";
 
 const Login = () => {
 
-  const dispatch = useDispatch();
+  const [email,setEmail]=useState('');
+  const[password,setPassword]=useState('');
   const navigate = useNavigate();
 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    // dispatch(login());
-    navigate("/dashboard");
+     try
+     {
+      const {data} = await loginUser({email,password});
+      localStorage.setItem('user',JSON.stringify(data.user))
+      localStorage.setItem('token',data.token);
+      navigate("/dashboard");
+     }
+     catch(err)
+     {
+      console.error(err);
+      alert("Invalid credentials");
+      
+     }
   };
 
   return (
@@ -28,6 +39,7 @@ const Login = () => {
               type="email"
               name="email"
               placeholder="Email"
+              onChange={(e)=>setEmail(e.target.value)}
               className="w-full p-3 border-b-2 border-gray-300 focus:outline-none focus:ring-0"
             />
 
@@ -35,7 +47,7 @@ const Login = () => {
               type="password"
               name="password"
               placeholder="Password"
-             
+              onChange={(e)=>setPassword(e.target.value)}
               className="w-full p-3 border-b-2 border-gray-300 focus:outline-none focus:ring-0"
             />
 
